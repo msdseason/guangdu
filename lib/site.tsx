@@ -1,11 +1,13 @@
 import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
 import defaults from '../public/site-content.json';
+import {upgradeContent,previewMode} from './content-upgrade';
 
 export type SiteContent=typeof defaults;
 export const defaultContent:SiteContent=defaults;
 export const sectionNames=['首屏','引言','咨询师简介','预约','心理学分享','流程与收费','常见问题','结尾'];
 
 export function validateContent(value:unknown):SiteContent {
+  value=upgradeContent(value,defaults.心理学分享.文章);
   function check(input:unknown,template:unknown,path:string):void {
     if(Array.isArray(template)){
       if(!Array.isArray(input)||input.length>100)throw Error(`${path}需要是列表，最多 100 项。`);
@@ -18,6 +20,9 @@ export function validateContent(value:unknown):SiteContent {
   }
   check(value,defaults,'网站');
   const config=value as SiteContent;
+  const ids=config.心理学分享.文章.map(a=>a.链接标识);
+  if(ids.some(id=>! /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(id)))throw Error('文章链接标识请填写 1–80 位英文字母、数字、短横线或下划线，并以字母或数字开头。');
+  if(new Set(ids).size!==ids.length)throw Error('每篇文章的链接标识需要不同。');
   if(config.版块顺序.some(s=>!sectionNames.includes(s))||new Set(config.版块顺序).size!==config.版块顺序.length)throw Error('版块顺序包含未知或重复的版块。');
   if(!Number.isInteger(config.档期.天数)||config.档期.天数<1||config.档期.天数>90)throw Error('档期天数需要是 1 到 90 之间的整数。');
   if(config.档期.开放时间.some(time=>!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)))throw Error('开放时间请填写 24 小时格式，例如 10:00。');
@@ -52,21 +57,23 @@ export function themeVariables(config:SiteContent):Record<string,string> {
   };
 }
 
-const SiteContext=createContext<SiteContent>(defaults);
+const SiteContext=createContext({site:defaults,loaded:false});
 export function SiteProvider({children}:{children:ReactNode}) {
   const [content,setContent]=useState<SiteContent>(defaults);
-  const preview=new URLSearchParams(window.location.search).get('preview')==='1'&&window.parent!==window;
+  const [loaded,setLoaded]=useState(false);
+  const preview=previewMode();
   useEffect(()=>{
     let active=true,draftReceived=false;
     function receive(event:MessageEvent){
       if(!preview||event.origin!==window.location.origin||event.source!==window.parent||event.data?.type!=='guangdu-preview')return;
-      try{const value=validateContent(event.data.content);draftReceived=true;setContent(value);}catch{/* Ignore malformed preview messages. */}
+      try{const value=validateContent(event.data.content);draftReceived=true;setContent(value);setLoaded(true);}catch{/* Ignore malformed preview messages. */}
     }
     window.addEventListener('message',receive);
     fetch(new URL('./site-content.json',window.location.href),{cache:'no-store'})
       .then(r=>{if(!r.ok)throw Error('内容暂时无法读取');return r.json();})
       .then(value=>{if(active&&!draftReceived)setContent(validateContent(value));})
-      .catch(()=>{/* The bundled, validated defaults keep the website available. */});
+      .catch(()=>{/* The bundled, validated defaults keep the website available. */})
+      .finally(()=>{if(active)setLoaded(true)});
     if(preview)window.parent.postMessage({type:'guangdu-preview-ready'},window.location.origin);
     return()=>{active=false;window.removeEventListener('message',receive);};
   },[preview]);
@@ -75,17 +82,21 @@ export function SiteProvider({children}:{children:ReactNode}) {
     let style=document.getElementById('site-custom-style');
     if(!style){style=document.createElement('style');style.id='site-custom-style';document.head.append(style);}
     style.textContent=content.外观.自定义样式;
-    document.title=formatText(content,content.品牌.网站标题);
+    const isArticle=window.location.pathname.endsWith('/article.html');
+    const id=new URLSearchParams(window.location.search).get('id');
+    const article=isArticle?content.心理学分享.文章.find(a=>a.链接标识===id):undefined;
+    document.title=article?formatText(content,article.标题)+' | '+content.品牌.名称:isArticle?formatText(content,content.心理学分享.详情页.未找到标题):formatText(content,content.品牌.网站标题);
+    const description=formatText(content,article?.摘要??content.品牌.网站描述);
     function meta(selector:string,value:string){document.querySelector(selector)?.setAttribute('content',value);}
-    meta('meta[name="description"]',formatText(content,content.品牌.网站描述));
+    meta('meta[name="description"]',description);
     meta('meta[property="og:title"]',document.title);
-    meta('meta[property="og:description"]',formatText(content,content.品牌.网站描述));
+    meta('meta[property="og:description"]',description);
     meta('meta[name="theme-color"]',content.外观.主要颜色.页面背景);
     document.querySelector('link[rel="icon"]')?.setAttribute('href',safeLink(content.品牌.网站图标,true));
   },[content]);
-  return <SiteContext.Provider value={content}>{children}</SiteContext.Provider>;
+  return <SiteContext.Provider value={{site:content,loaded}}>{children}</SiteContext.Provider>;
 }
 export function useSite(){
-  const site=useContext(SiteContext);
-  return {site,t:(text:string,extra?:Record<string,string>)=>formatText(site,text,extra)};
+  const {site,loaded}=useContext(SiteContext);
+  return {site,loaded,t:(text:string,extra?:Record<string,string>)=>formatText(site,text,extra)};
 }

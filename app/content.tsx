@@ -1,14 +1,10 @@
-import {useState} from 'react';
 import {ArrowUpRight,Plus} from 'lucide-react';
-import {Button} from '@/components/ui/button';
-import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {useSite,safeLink} from '@/lib/site';
+import {articleHref,previewMode} from '@/lib/content-upgrade';
 
 export function Journal(){
   const {site,t}=useSite(),c=site.心理学分享;
-  const [selected,setSelected]=useState<number|null>(null);
-  const article=selected===null?undefined:c.文章[selected];
-  return <><section id="journal" className="section journal"><div className="section-heading"><div><div className="eyebrow">{t(c.英文标题)}</div><h2>{t(c.标题)}</h2></div><span className="muted">{t(c.副标题)}</span></div><div className="article-grid">{c.文章.map((a,i)=><button className="article-card" key={i} onClick={()=>setSelected(i)}><div className="article-image"><img src={safeLink(a.图片,true)||undefined} alt={t(a.图片说明)} loading="lazy"/><span>{t(a.分类)}</span></div><h3>{t(a.标题)}<ArrowUpRight size={18}/></h3><p>{t(a.摘要)}</p><small>{t(c.署名)} · {t(a.阅读时长)} {t(c.阅读单位)}</small></button>)}</div></section><Dialog open={!!article} onOpenChange={open=>{if(!open)setSelected(null)}}><DialogContent className="reading-dialog">{article&&<><DialogTitle className="reading-title">{t(article.标题)}</DialogTitle><DialogDescription>{t(article.分类)} · {t(c.署名)}</DialogDescription>{article.段落.map((p,i)=><p className="site-lines" key={i}>{t(p)}</p>)}<small>{t(c.文章说明)}</small><Button variant="outline" onClick={()=>setSelected(null)}>{t(c.关闭按钮)}</Button></>}</DialogContent></Dialog></>
+  return <section id="journal" className="section journal"><div className="section-heading"><div><div className="eyebrow">{t(c.英文标题)}</div><h2>{t(c.标题)}</h2></div><span className="muted">{t(c.副标题)}</span></div><div className="article-grid">{c.文章.map(a=><a className="article-card" key={a.链接标识} href={articleHref(a.链接标识,previewMode())}><div className="article-image"><img src={safeLink(a.图片,true)||undefined} alt={t(a.图片说明)} loading="lazy"/><span>{t(a.分类)}</span></div><h3>{t(a.标题)}<ArrowUpRight size={18}/></h3><p>{t(a.摘要)}</p><small>{t(c.署名)} · {t(a.阅读时长)} {t(c.阅读单位)}</small></a>)}</div></section>
 }
 export function Process(){const {site,t}=useSite(),c=site.流程与收费,s=site.服务;return <section id="process" className="process-wrap"><div className="section"><div className="section-heading"><div><div className="eyebrow">{t(c.英文标题)}</div><h2>{t(c.标题)}</h2></div><span className="muted">{t(c.副标题)}</span></div><div className="steps">{c.步骤.map((step,i)=><div key={i}><b>{step.编号}</b><h3>{t(step.标题)}</h3><p>{t(step.正文)}</p></div>)}</div><div className="price-row"><div><h3>{t(s.名称)}</h3><p>{t(s.简述)}</p></div><strong>{s.币种} {s.价格} <small>{t(s.价格单位)}</small></strong><a href={safeLink(c.按钮地址)}>{t(c.按钮文字)}<ArrowUpRight size={17}/></a></div><p className="price-note">{t(s.收费说明)}</p></div></section>}
 export function Faq(){const {site,t}=useSite(),c=site.常见问题;return <section id="faq" className="section faq"><div><div className="eyebrow">{t(c.英文标题)}</div><h2>{t(c.标题)}</h2><p className="muted site-lines">{t(c.副标题)}</p></div><div>{c.问题.map((item,i)=><details key={i}><summary><span><small>{String(i+1).padStart(2,'0')}</small>{t(item.问题)}</span><Plus size={17}/></summary><p className="site-lines">{t(item.回答)}</p></details>)}</div></section>}
