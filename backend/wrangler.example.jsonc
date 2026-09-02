@@ -1,0 +1,13 @@
+{
+  "name": "xinyu-booking",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-15",
+  "workers_dev": true,
+  "vars": {"ALLOWED_ORIGINS": "https://msdseason.github.io"},
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "xinyu-bookings",
+    "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+    "migrations_dir": "migrations"
+  }]
+}
