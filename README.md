@@ -1,57 +1,66 @@
-# guangdu
+# 光渡心理 · 咨询师时隐
 
-光渡心理
+保留原网站的米白与鼠尾草绿配色、拱形图片、排版和手机布局，提供完整源文件与中文编辑器。
 
-# 心屿心理咨询 · guangdu 仓库部署版
+## 在哪里修改
 
-直接复用原 Sites 网站的 React 页面、组件和 CSS，保留背景、配色、排版、字体设置、图片、桌面与手机布局、文章弹窗、FAQ 和日期选择。不是截图网站。照片已随站打包。
+网站发布成功后：
 
-## 当前完成状态
+- 网站：https://msdseason.github.io/guangdu/
+- 中文编辑页：https://msdseason.github.io/guangdu/editor.html
+- 内容文件：`docs/site-content.json`
 
-展示站已构建，目标仓库为 https://github.com/msdseason/guangdu 。
+编辑页可以修改品牌、姓名、简介、全部文章正文、流程、价格、时长、常见问题、按钮、图片、示例档期、页脚、颜色、字体和布局参数。文章、FAQ、导航和流程可以增删排序；页面版块可以隐藏和排序。进一步的布局调整可以写入“外观 → 自定义样式”，全部 React 和 CSS 源文件也可编辑。
 
-GitHub Pages 启用并部署成功后的预期地址是 https://msdseason.github.io/guangdu/ ，目前尚未上线。预约后台也尚未部署。
+品牌名称改为“光渡心理”，咨询师改为“时隐”。网站中的资质、服务与收费说明仍为示例，未填入未经确认的个人经历。
 
-`docs/` 是已构建、可以直接上线的网站。源码位于 `app/`、`components/`、`lib/`。`.github/workflows/pages.yml` 会将 `docs/` 发布到 GitHub Pages，无需在线安装依赖。
+## 修改并免费发布
 
-原网站使用操作系统字体。本版保留相同字体设置，因此同一设备上的布局保持一致，不同系统上的字形会像原站一样略有不同。
+1. 打开编辑页，用中文表单修改内容，右侧可切换电脑和手机预览。
+2. 点击“导出修改”，保存 `site-content.json`。
+3. 登录 GitHub，打开 https://github.com/msdseason/guangdu/upload/main/docs ，上传导出的文件并提交更改。
+4. Pages 已开启时，工作流会自动发布。完成后刷新网站即可。
 
-## 免费发布展示站
+编辑页是公开的本地预览工具：任何人可以尝试编辑自己的预览，但只有拥有 GitHub 仓库写入权限的人能够发布。编辑页不索要密码、令牌，不会从浏览器直接写入 GitHub。导出后仍需上传；它不代表网站已经保存或发布。离开前请导出需要保留的修改。
 
-1. 打开已创建的公开仓库 `msdseason/guangdu`。
-2. 上传本目录内容，包含 `docs/` 与 `.github/`。
-3. 打开仓库 Settings → Pages → Source，选择 GitHub Actions。
-4. 运行 Publish Xinyu website，等待成功后使用返回的 `github.io` 地址。
+图片可以填写相对路径、HTTPS 图片网址，或点击“选择图片”。本地图片会包含在导出的内容文件中；发布流程会将它们转换为图片文件，分享卡片也能使用。单图上限 3 MB，内容文件上限 20 MB。SVG 图标请通过仓库上传后填写路径。
 
-也可以只上传「静态网站部署包」中的文件到仓库根目录，在 Pages 中选择 Deploy from a branch → main → /(root)。
+`{品牌}`、`{简称}`、`{咨询师}`、`{价格}`、`{时长}`、`{币种}`、`{年份}` 会自动引用设置。例如只修改“服务 → 价格”，预约侧栏和收费区会一起更新。分享图片中的文字是图片本身，更换品牌时也需更换分享图片。
 
-仓库和网站将公开，发布前请确认演示简介、收费等可对外展示。当前已保留示例标识。网站未包含令牌、预约记录、用户资料或原 Sites 账号配置。
+## 首次开启 GitHub Pages
 
-## 预约功能
+仓库 Settings → Pages → Build and deployment → Source 选择 GitHub Actions。
+然后在 Actions 中运行 `Publish Guangdu website`，或提交一次更改。只有部署成功后，上方网址才可访问。
 
-GitHub Pages 不运行后台。未配置 API 时，页面可以选择示例日期、时间、方式及填写昵称，但「预约尚未开放」按钮禁用，不会假装已保存。
+## 预约后台
 
-`backend/` 提供与原预约流程兼容的 Cloudflare Workers + D1 后台，包括持久保存、时段唯一约束、并发冲突提示和取消。Cloudflare 免费计划有额度限制；此项目没有开通任何付费服务。
+GitHub Pages 只托管网页。未配置后台时，只展示示例档期，提交按钮禁用，不会假装保存预约。品牌改名或编辑页面不会自动开通真实咨询。
 
-接通方法：
+`backend/` 是独立的 Cloudflare Workers + D1 预约服务，支持持久保存、时段唯一约束和取消。接通步骤：
 
-1. 在你自己的 Cloudflare 免费账号创建 D1 数据库 `xinyu-bookings`。
-2. 复制 `backend/wrangler.example.jsonc` 为 `backend/wrangler.jsonc`，填入真实数据库 ID 与 GitHub Pages 的源（例如 `https://用户名.github.io`，不含仓库路径）。
-3. 用 Wrangler 登录你的账号后，执行 `pnpm exec wrangler d1 migrations apply xinyu-bookings --remote --config backend/wrangler.jsonc`，再运行 `pnpm backend:deploy`。
-4. 将部署返回的 Worker HTTPS 地址写入 `public/site-config.js` 与 `docs/site-config.js` 的 `apiBase`。
-5. 重新发布即可启用原有保存、凭证下载和取消界面。
+1. 创建 D1 数据库，复制 `backend/wrangler.example.jsonc` 为 `backend/wrangler.jsonc`，填写数据库 ID 和允许的源 `https://msdseason.github.io`。
+2. 将最新 `docs/site-content.json` 同步到 `public/site-content.json`。后台使用其中的档期配置；线上已有后台时，修改正式档期需要重新部署后台。
+3. 登录自己的 Cloudflare 账号，应用数据库迁移并部署 Worker。
+4. 在中文编辑页“预约服务 → 接口地址”填入 Worker 的 HTTPS 地址，导出并发布。
 
-只将演示昵称写入后台，不用于正式心理咨询接待。真实服务资料、联系渠道和规则仍需完善。
+后台配置范例和数据库名称中的内部标识 `xinyu` 保留兼容，不会在网页显示。后台尚未部署，也没有开通付费服务。正式收费咨询需选择符合平台用途条款的托管方案，并补充真实服务资料和规则。
 
-## 本地修改
+## 源文件与本地开发
 
-Node 22.13+，pnpm 11.19。安装依赖后运行 `pnpm dev`。修改后运行 `pnpm build`，将 `dist/` 的内容更新到 `docs/` 并提交。Pages 工作流发布的是已构建的 `docs/`，不会自动编译源码。
+- `docs/site-content.json`：日常内容的主要编辑文件。
+- `public/site-content.json`：构建与后台使用的内容副本。
+- `app/`：页面、编辑器与样式。
+- `lib/`：配置读取、验证、预览和预约逻辑。
+- `docs/`：可直接部署的完整网页。
+- `backend/`：独立预约后台与数据库迁移。
+
+使用 Node 22.13+、pnpm 11.19。安装依赖后 `pnpm dev`，打开 `/editor.html`。`pnpm build` 会先同步日常内容，构建网站和编辑器，更新 `docs/` 并准备分享信息。修改源码后，应一并提交更新后的 `docs/`；Pages 工作流发布的是 `docs/`，不在线安装构建依赖。
+
+只编辑内容时，可直接更新 `docs/site-content.json`，不需要重新编译。切勿只修改 `public/site-content.json` 后直接发布，因为日常内容以 `docs/` 中的版本为准。
 
 ## 官方资料
 
 - GitHub Pages：https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages
-- 使用限制：https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
+- Pages 使用限制：https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
 - Workers 免费额度：https://developers.cloudflare.com/workers/platform/pricing/
 - D1 免费额度：https://developers.cloudflare.com/d1/platform/pricing/
-
-GitHub Pages 对主要用于促成商业交易的站点有限制；正式经营收费咨询预约应选择允许该用途的托管平台。

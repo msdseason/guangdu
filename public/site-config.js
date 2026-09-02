@@ -1,3 +1,2 @@
-// GitHub Pages 展示版保留为空。接通预约后台后填写其 HTTPS 地址。
-// Cloudflare 同站部署可填写 apiBase: "."。
-window.XINYU_CONFIG = { apiBase: "" };
+// 可选：也可以在网站编辑页的「预约服务」中填写已部署的后台地址。
+window.GUANGDU_CONFIG = { apiBase: "" };
